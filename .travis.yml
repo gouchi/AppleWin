@@ -47,6 +47,6 @@ matrix:
             - boost
             - sdl2
             - sdl2_image
-            - libgles-dev
             - libpcap
             - libslirp
+          update: true
