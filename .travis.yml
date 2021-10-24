@@ -35,6 +35,7 @@ matrix:
 
     - name: "AppleWin on Mac OS X"
       os: osx
+      osx_image: xcode12.5
 
       script: source/linux/macosbuild.sh
 
@@ -49,4 +50,3 @@ matrix:
             - sdl2_image
             - libpcap
             - libslirp
-          update: true
