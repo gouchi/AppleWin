@@ -8,27 +8,45 @@ matrix:
     #   os: windows
     #   script: ./CIBuild.bat
 
-    - name: "AppleWin on Linux"
-      os: linux
-      dist: focal
-      arch: amd64
+    # - name: "AppleWin on Linux"
+    #   os: linux
+    #   dist: focal
+    #   arch: amd64
 
-      script: source/linux/build.sh
+    #   script: source/linux/build.sh
+
+    #   addons:
+    #     apt:
+    #       packages:
+    #         - cmake
+    #         - libyaml-dev
+    #         - libminizip-dev
+    #         - qtbase5-dev
+    #         - qtmultimedia5-dev
+    #         - libqt5gamepad5-dev
+    #         - libboost-program-options-dev
+    #         - libncurses-dev
+    #         - libevdev-dev
+    #         - libsdl2-dev
+    #         - libsdl2-image-dev
+    #         - libgles-dev
+    #         - libpcap-dev
+    #         - libslirp-dev
+
+    - name: "AppleWin on Mac OS X"
+      os: osx
+
+      script: source/linux/macosbuild.sh
 
       addons:
-        apt:
+        homebrew:
           packages:
             - cmake
-            - libyaml-dev
-            - libminizip-dev
-            - qtbase5-dev
-            - qtmultimedia5-dev
-            - libqt5gamepad5-dev
-            - libboost-program-options-dev
-            - libncurses-dev
-            - libevdev-dev
-            - libsdl2-dev
-            - libsdl2-image-dev
+            - libyaml
+            - minizip
+            - boost
+            - sdl2
+            - sdl2_image
             - libgles-dev
-            - libpcap-dev
-            - libslirp-dev
+            - libpcap
+            - libslirp

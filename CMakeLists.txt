@@ -40,10 +40,10 @@ include_directories(source)
 
 add_subdirectory(source)
 add_subdirectory(source/frontends/common2)
-add_subdirectory(source/frontends/ncurses)
-add_subdirectory(source/frontends/qt)
+# add_subdirectory(source/frontends/ncurses)
+# add_subdirectory(source/frontends/qt)
 add_subdirectory(source/frontends/sdl)
-add_subdirectory(source/frontends/libretro)
+# add_subdirectory(source/frontends/libretro)
 add_subdirectory(test/TestCPU6502)
 
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
