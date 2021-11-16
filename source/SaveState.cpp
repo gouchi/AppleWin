@@ -389,14 +389,13 @@ static void ParseSlots(YamlLoadHelper& yamlLoadHelper, UINT unitVersion)
 		if (slot == 0)
 		{
 			SetExpansionMemType(type);	// calls GetCardMgr().Insert() & InsertAux()
-			CreateLanguageCard();
-			bRes = GetLanguageCard()->LoadSnapshot(yamlLoadHelper, slot, cardVersion);
 		}
 		else
 		{
 			GetCardMgr().Insert(slot, type);
-			bRes = GetCardMgr().GetRef(slot).LoadSnapshot(yamlLoadHelper, slot, cardVersion);
 		}
+
+		bRes = GetCardMgr().GetRef(slot).LoadSnapshot(yamlLoadHelper, slot, cardVersion);
 
 		cardInserted[slot] = true;
 
@@ -404,13 +403,6 @@ static void ParseSlots(YamlLoadHelper& yamlLoadHelper, UINT unitVersion)
 		yamlLoadHelper.PopMap();
 	}
 
-	// Save-state may not contain any info about empty slots, so ensure they are set to empty
-	for (UINT slot = SLOT0; slot < NUM_SLOTS; slot++)
-	{
-		if (cardInserted[slot])
-			continue;
-		GetCardMgr().Remove(slot);
-	}
 }
 
 //---
@@ -476,6 +468,10 @@ static void Snapshot_LoadState_v2(void)
 
 		for (UINT slot = SLOT0; slot < NUM_SLOTS; slot++)
 			GetCardMgr().Remove(slot);
+
+		if (!IsApple2PlusOrClone(GetApple2Type()))
+			GetCardMgr().Insert(SLOT0, CT_LanguageCardIIe);
+
 		GetCardMgr().RemoveAux();
 
 		MemReset();							// Also calls CpuInitialize()
@@ -584,9 +580,6 @@ void Snapshot_SaveState(void)
 		{
 			yamlSaveHelper.UnitHdr(GetSnapshotUnitSlotsName(), UNIT_SLOTS_VER);
 			YamlSaveHelper::Label state(yamlSaveHelper, "%s:\n", SS_YAML_KEY_STATE);
-
-			if (GetCardMgr().QuerySlot(SLOT0) != CT_Empty && IsApple2PlusOrClone(GetApple2Type()))
-				GetLanguageCard()->SaveSnapshot(yamlSaveHelper);	// Language Card or Saturn 128K
 
 			GetCardMgr().SaveSnapshot(yamlSaveHelper);
 		}

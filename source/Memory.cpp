@@ -235,7 +235,6 @@ static BOOL    modechanging = 0;				// An Optimisation: means delay calling Upda
 static UINT    memrompages = 1;
 
 static CNoSlotClock* g_NoSlotClock = new CNoSlotClock;
-static LanguageCardUnit* g_pLanguageCard = NULL;	// For all Apple II, //e and above
 
 #ifdef RAMWORKS
 static UINT		g_uMaxExPages = 1;				// user requested ram pages (default to 1 aux bank: so total = 128KB)
@@ -303,7 +302,7 @@ void SetExpansionMemType(const SS_CARDTYPE type)
 	}
 	else	// Apple //e or above
 	{
-		newSlot0Card = CT_Empty;		// NB. No slot0 for //e
+		newSlot0Card = CT_LanguageCardIIe;		// Forced CT_LanguageCardIIe on a //e
 		newSlotAuxCard = CT_Extended80Col;
 	}
 
@@ -327,26 +326,6 @@ void SetExpansionMemType(const SS_CARDTYPE type)
 
 	GetCardMgr().Insert(SLOT0, newSlot0Card);
 	GetCardMgr().InsertAux(newSlotAuxCard);
-}
-
-void CreateLanguageCard(void)
-{
-	delete g_pLanguageCard;
-	g_pLanguageCard = NULL;
-
-	if (IsApple2PlusOrClone(GetApple2Type()))
-	{
-		if (GetCardMgr().QuerySlot(SLOT0) == CT_Saturn128K)
-			g_pLanguageCard = new Saturn128K(g_uSaturnBanksFromCmdLine);
-		else if (GetCardMgr().QuerySlot(SLOT0) == CT_LanguageCard)
-			g_pLanguageCard = new LanguageCardSlot0;
-		else
-			g_pLanguageCard = NULL;
-	}
-	else
-	{
-		g_pLanguageCard = new LanguageCardUnit;
-	}
 }
 
 SS_CARDTYPE GetCurrentExpansionMemType(void)
@@ -374,19 +353,23 @@ void SetSaturnMemorySize(UINT banks)
 	g_uSaturnBanksFromCmdLine = banks;
 }
 
+UINT GetSaturnMemorySize()
+{
+	return g_uSaturnBanksFromCmdLine;
+}
 //
 
 static BOOL GetLastRamWrite(void)
 {
-	if (g_pLanguageCard)
-		return g_pLanguageCard->GetLastRamWrite();
+	if (GetCardMgr().GetLanguageCard())
+		return GetCardMgr().GetLanguageCard()->GetLastRamWrite();
 	return 0;
 }
 
 static void SetLastRamWrite(BOOL count)
 {
-	if (g_pLanguageCard)
-		g_pLanguageCard->SetLastRamWrite(count);
+	if (GetCardMgr().GetLanguageCard())
+		GetCardMgr().GetLanguageCard()->SetLastRamWrite(count);
 }
 
 //
@@ -397,12 +380,6 @@ void SetMemMainLanguageCard(LPBYTE ptr, bool bMemMain /*=false*/)
 		g_pMemMainLanguageCard = memmain+0xC000;
 	else
 		g_pMemMainLanguageCard = ptr;
-}
-
-LanguageCardUnit* GetLanguageCard(void)
-{
-	_ASSERT(g_pLanguageCard);
-	return g_pLanguageCard;
 }
 
 LPBYTE GetCxRomPeripheral(void)
@@ -1288,9 +1265,6 @@ void MemDestroy()
 	RWpages[0]=NULL;
 #endif
 
-	delete g_pLanguageCard;
-	g_pLanguageCard = NULL;
-
 	memaux   = NULL;
 	memmain  = NULL;
 	memdirty = NULL;
@@ -1530,8 +1504,6 @@ void MemInitialize()
 
 	//
 
-	CreateLanguageCard();
-
 	MemInitializeROM();
 	MemInitializeCustomROM();
 	MemInitializeCustomF8ROM();
@@ -1718,11 +1690,6 @@ void MemInitializeCustomROM(void)
 void MemInitializeIO(void)
 {
 	InitIoHandlers();
-
-	if (g_pLanguageCard)
-		g_pLanguageCard->InitializeIO(NULL);
-	else
-		RegisterIoHandler(LanguageCardUnit::kSlot0, IO_Null, IO_Null, NULL, NULL, NULL, NULL);
 
 	GetCardMgr().InitializeIO(pCxRomPeripheral);
 }
@@ -2253,9 +2220,9 @@ bool MemLoadSnapshot(YamlLoadHelper& yamlLoadHelper, UINT unitVersion)
 		g_MemTypeAppleII = CT_LanguageCard;	// version=1: original Apple II always has a LC
 	else
 		g_MemTypeAppleIIPlus = CT_Empty;	// version=2+: Apple II/II+ initially start with slot-0 empty
-	SetExpansionMemTypeDefault();
-	CreateLanguageCard();	// Create default LC now for: (a) //e which has no slot-0 LC (so this is final)
-							//							  (b) II/II+ which get re-created later if slot-0 has a card
+
+	SetExpansionMemTypeDefault();	// Create default LC now for: (a) //e which has no slot-0 LC (so this is final)
+							        //							  (b) II/II+ which get re-created later if slot-0 has a card
 
 	//
 
@@ -2419,7 +2386,6 @@ static void MemLoadSnapshotAuxCommon(YamlLoadHelper& yamlLoadHelper, const std::
 		yamlLoadHelper.PopMap();
 	}
 
-	GetCardMgr().Remove(SLOT0);
 	GetCardMgr().InsertAux(type);
 
 	memaux = RWpages[g_uActiveBank];
